@@ -7,7 +7,8 @@
                  [overtone "0.10.3"]
                  [org.clojure/core.logic "0.8.11"]
                  [proto-repl "0.3.1"]
-                 [eftest "0.5.3"]]
+                 [eftest "0.5.3"]
+                 [org.clojure/data.priority-map "0.0.10"]]
   :main ^:skip-aot voice-plan.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

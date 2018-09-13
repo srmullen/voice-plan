@@ -1,6 +1,5 @@
 (ns voice-plan.planning-problem
-  (:require [voice-plan.search :refer [Searchable goal? actions]]
-            [voice-plan.utils :refer [product]]
+  (:require [voice-plan.utils :refer [product]]
             [clojure.set :refer [difference union]]))
 
 (defn action
@@ -44,7 +43,13 @@
 
 (defrecord PlanningProblem [init goal action-list])
 
-(extend-protocol Searchable
+(defprotocol Planning
+  (goal? [self state])
+  (actions [self state])
+  (path-cost [self c state1 action state2])
+  (value [self]))
+
+(extend-protocol Planning
   PlanningProblem
   (goal? [self state]
          ; (= (get-counts (:goal self)) (get-counts state)))
@@ -66,10 +71,23 @@
 
 (defn planning-problem
   ([init goal]
-   (PlanningProblem. init (set goal) #{}))
+   (PlanningProblem. (set init) (set goal) #{}))
   ([init goal action-list]
-   (PlanningProblem. init (set goal) action-list)))
+   (PlanningProblem. (set init) (set goal) action-list)))
 
 (defn make-relations [name & args]
   (map #(apply (partial expr name) %)
        (product args)))
+
+(let [ex (expr :have :good :cake)])
+
+
+(defn- str-expr [expr]
+  (str (:name expr) (:args expr)))
+
+(defn str [item]
+  (cond
+    (= (:type item) :expr) (str-expr item)
+    (= (:type item) :action) (str-expr (:op item))))
+
+(str (action (expr :be :good) {}))

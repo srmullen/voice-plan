@@ -7,7 +7,7 @@
   (let [precond-pos [(expr :Have :Cake)]
         precond-neg []
         effect-add [(expr :Eaten :Cake)]
-        effect-rem [(expr :Have :Cake)]
+        effect-rem [(expr :Have :Cake) (negate (expr :Eaten :Cake))]
         eat-action (action (expr :Eat :Cake)
                            [precond-pos precond-neg]
                            [effect-add effect-rem])
@@ -27,8 +27,12 @@
 
 (def problem (have-cake))
 
-(search/actions problem (:init problem))
+(defn get-solution [tree]
+  (loop [node tree
+         actions '()]
+    (if node
+      (recur (:parent node)
+        (conj actions (:action node)))
+      (pop actions))))
 
-(search/goal? (have-cake) #{(expr :Have :Cake) (expr :Eaten :Cake)})
-
-(search/breadth-first problem)
+(get-solution (search/depth-first (have-cake)))

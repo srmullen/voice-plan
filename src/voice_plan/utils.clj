@@ -6,3 +6,8 @@
     (for [x (first colls)
           more (product (rest colls))]
       (cons x more))))
+
+(defn queue
+  ([] (clojure.lang.PersistentQueue/EMPTY))
+  ([coll]
+   (reduce conj (queue) coll)))
