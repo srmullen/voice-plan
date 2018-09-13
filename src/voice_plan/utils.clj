@@ -1,4 +1,5 @@
-(ns voice-plan.utils)
+(ns voice-plan.utils
+  (:require [clojure.data.priority-map :refer [priority-map]]))
 
 (defn product [colls]
   (if (empty? colls)
@@ -11,3 +12,7 @@
   ([] (clojure.lang.PersistentQueue/EMPTY))
   ([coll]
    (reduce conj (queue) coll)))
+
+(defn priority-queue
+  ([]
+   (priority-map)))

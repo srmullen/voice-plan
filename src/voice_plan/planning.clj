@@ -1,4 +1,4 @@
-(ns voice-plan.planning-problem
+(ns voice-plan.planning
   (:require [voice-plan.utils :refer [product]]
             [clojure.set :refer [difference union]]))
 
@@ -85,7 +85,7 @@
 (defn- str-expr [expr]
   (str (:name expr) (:args expr)))
 
-(defn str [item]
+(defn sentence [item]
   (cond
     (= (:type item) :expr) (str-expr item)
     (= (:type item) :action) (str-expr (:op item))))

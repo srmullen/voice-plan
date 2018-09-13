@@ -1,6 +1,6 @@
-(ns voice-plan.planning-problem-test
+(ns voice-plan.planning-test
   (:require [clojure.test :refer :all]
-            [voice-plan.planning-problem :refer :all]
+            [voice-plan.planning :refer :all]
             [voice-plan.search :refer :all]))
 
 (def enter-bath (action (expr :bath)

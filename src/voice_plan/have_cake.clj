@@ -1,7 +1,8 @@
 (ns voice-plan.have-cake
-  (:use [voice-plan.planning-problem]
+  (:use [voice-plan.planning :refer [expr action planning-problem negate]]
         [voice-plan.utils])
-  (:require [voice-plan.search :as search]))
+  (:require [voice-plan.search :as search]
+            [clojure.data.priority-map :refer [priority-map]]))
 
 (defn get-actions []
   (let [precond-pos [(expr :Have :Cake)]
@@ -35,4 +36,11 @@
         (conj actions (:action node)))
       (pop actions))))
 
-(get-solution (search/depth-first (have-cake)))
+; (get-solution (search/uniform-cost (have-cake)))
+; (get-solution (search/breadth-first (have-cake)))
+
+(comment
+  (println *e)
+
+  (into (priority-map)
+        (map (juxt identity (constantly 1)) ["hello" {:hello :world}])))
