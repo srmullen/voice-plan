@@ -25,12 +25,12 @@
 (deftest goal-test
   (testing "goal?"
     (testing "returns true when state is the same as problem goal"
-      (is (goal? problem #{(expr :is :clean)
-                           (expr :is :dry)})))
+      (is (goal? (:goal problem) #{(expr :is :clean)
+                                   (expr :is :dry)})))
 
     (testing "return false when goal has not been reached"
-      (is (not (goal? problem #{(negate (expr :is :dirty))
-                                (expr :is :wet)}))))))
+      (is (not (goal? (:goal problem) #{(negate (expr :is :dirty))
+                                        (expr :is :wet)}))))))
 
 (deftest meets-preconditions-test
   (testing "meet-preconditions?"
@@ -48,9 +48,9 @@
 
 (deftest actions-test
   (testing "actions returns a set of possible actions"
-    (is (= (actions problem #{(expr :is :happy)})
+    (is (= (actions (:action-list problem) #{(expr :is :happy)})
            #{enter-bath use-towel}))
-    (is (= (actions problem #{(expr :is :clean)})
+    (is (= (actions (:action-list problem) #{(expr :is :clean)})
            #{enter-bath use-towel get-dirty}))))
 
 (deftest result-test
@@ -69,8 +69,8 @@
 (deftest goal?-test
   (testing "goal?"
     (testing "returns true if all goals are in state"
-      (is (goal? problem #{(expr :is :clean)
-                           (expr :is :dry)}))
-      (is (goal? problem #{(expr :is :clean)
-                           (expr :is :dry)
-                           (expr :is :smelly)})))))
+      (is (goal? (:goal problem) #{(expr :is :clean)
+                                   (expr :is :dry)}))
+      (is (goal? (:goal problem) #{(expr :is :clean)
+                                   (expr :is :dry)
+                                   (expr :is :smelly)})))))

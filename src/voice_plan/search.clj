@@ -1,37 +1,38 @@
 (ns voice-plan.search
-  (:require [voice-plan.planning :refer [result actions goal?]]
+  (:require [voice-plan.planning
+             :refer [result actions goal? start-action]]
             [voice-plan.utils :refer [queue]]
             [clojure.data.priority-map :refer [priority-map priority-map-by]]))
 
 (defn node
-  ([problem]
-   (node problem (:init problem)))
-  ([problem state]
-   (node problem state nil nil nil))
-  ([problem state parent action cost]
-   {:problem problem
-    :state state
+  ([state]
+   (node state nil nil nil))
+  ([state parent action cost]
+   {:state state
     :parent parent
     :action action
     :cost cost}))
 
 (defn expand
   "Return a list of nodes reachable in one step from the given node n."
-  [n]
+  [result actions n]
   (let [state (:state n)]
     (map (fn [action]
-           (node (:problem n) (result state action) n action nil))
-         (actions (:problem n) state))))
+           (node (result state action) n action nil))
+         (actions state))))
 
-(defn breadth-first [problem]
-  (loop [current (node problem)
+(defn breadth-first [{goal? :goal?
+                      actions :actions
+                      result :result}
+                     state]
+  (loop [current (node state)
          frontier (queue)
          explored #{}
          iteration 0]
-    (if (or (goal? problem (current :state))
+    (if (or (goal? (current :state))
             (> iteration 1000))
       current
-      (let [expansion (expand current)
+      (let [expansion (expand result actions current)
             filtered (remove #(contains? explored (:state %))
                              expansion)
             new-frontier (into frontier filtered)]
@@ -41,15 +42,18 @@
             (conj explored (current :state))
             (inc iteration)))))))
 
-(defn depth-first [problem]
-  (loop [current (node problem)
+(defn depth-first [{goal? :goal?
+                    actions :actions
+                    result :result}
+                   state]
+  (loop [current (node state)
          frontier []
          explored #{}
          iteration 0]
-    (if (or (goal? problem (current :state))
+    (if (or (goal? (current :state))
             (> iteration 1000))
       current
-      (let [expansion (expand current)
+      (let [expansion (expand result actions current)
             filtered (remove #(contains? explored (:state %))
                              expansion)
             new-frontier (into frontier filtered)]
@@ -60,18 +64,20 @@
             (inc iteration)))))))
 
 (defn uniform-cost
-  ([problem]
-   (uniform-cost problem (constantly 1)))
-  ([problem cost-fn]
-   (loop [current (node problem)
+  ([{goal? :goal?
+     actions :actions
+     result :result
+     cost :cost}
+    state]
+   (loop [current (node state)
           frontier (priority-map)
           explored #{}
           iteration 0]
-     (if (or (goal? problem (current :state))
+     (if (or (goal? (current :state))
              (> iteration 1000))
        current
-       (let [expansion (expand current)
-             filtered (map (juxt identity cost-fn)
+       (let [expansion (expand result actions current)
+             filtered (map (juxt identity cost)
                            (remove #(contains? explored (:state %))
                              expansion))
              new-frontier (into frontier filtered)]
@@ -84,12 +90,19 @@
 
 (defn a* [problem])
 
-; (loop [q (priority-map :a 1 :b 1 :d 2 :c 1 :f 3 :e 3)]
-;   (println (peek q))
-;   (if (not (empty? q))
-;     (recur (pop q))))
-;
-; (into (priority-map) [[{:hello :world} 1]])
-;
-; (peek (into (priority-map)
-;        (map (juxt identity (constantly 1)) ["hello" {:hello :world}])))
+(defn get-solution [tree]
+  (loop [node tree
+         actions '()]
+    (if node
+      (recur (:parent node)
+        (conj actions (or (:action node)
+                          (start-action (:state node)))))
+      actions)))
+
+(defn get-states [tree]
+  (loop [node tree
+         states '()]
+    (if node
+      (recur (:parent node)
+        (conj states (:state node)))
+      states)))

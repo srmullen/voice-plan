@@ -1,7 +1,8 @@
 (ns voice-plan.have-cake
-  (:use [voice-plan.planning :refer [expr action planning-problem negate]]
-        [voice-plan.utils])
-  (:require [voice-plan.search :as search]
+  (:use [voice-plan.utils])
+  (:require [voice-plan.planning :refer [expr action negate]]
+            [voice-plan.planning :as planning]
+            [voice-plan.search :as search]
             [clojure.data.priority-map :refer [priority-map]]))
 
 (defn get-actions []
@@ -21,26 +22,12 @@
                             [effect-add effect-rem])]
     #{eat-action bake-action}))
 
-(defn have-cake []
-  (planning-problem [(expr :Have :Cake) (negate (expr :Eaten :Cake))]
-                    [(expr :Have :Cake) (expr :Eaten :Cake)]
-                    (get-actions)))
-
-(def problem (have-cake))
-
-(defn get-solution [tree]
-  (loop [node tree
-         actions '()]
-    (if node
-      (recur (:parent node)
-        (conj actions (:action node)))
-      (pop actions))))
-
 ; (get-solution (search/uniform-cost (have-cake)))
-; (get-solution (search/breadth-first (have-cake)))
+(def problem {:goal? (partial planning/goal? #{(expr :Have :Cake)
+                                               (expr :Eaten :Cake)})
+              :result planning/result
+              :actions (partial planning/actions (get-actions))
+              :cost (constantly 1)})
+(def init #{(expr :Have :Cake) (negate (expr :Eaten :Cake))})
 
-(comment
-  (println *e)
-
-  (into (priority-map)
-        (map (juxt identity (constantly 1)) ["hello" {:hello :world}])))
+(search/get-solution (search/uniform-cost problem init))

@@ -5,6 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [overtone "0.10.3"]
+                 [leipzig "0.10.0"]
                  [org.clojure/core.logic "0.8.11"]
                  [proto-repl "0.3.1"]
                  [eftest "0.5.3"]

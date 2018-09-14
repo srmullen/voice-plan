@@ -41,28 +41,17 @@
 (defn negate [expr]
   (assoc expr :not (not (:not expr))))
 
-(defrecord PlanningProblem [init goal action-list])
+(defn goal? [goal state]
+  (every? (fn [exp]
+            (contains? state exp))
+          goal))
 
-(defprotocol Planning
-  (goal? [self state])
-  (actions [self state])
-  (path-cost [self c state1 action state2])
-  (value [self]))
-
-(extend-protocol Planning
-  PlanningProblem
-  (goal? [self state]
-         ; (= (get-counts (:goal self)) (get-counts state)))
-         (every? (fn [exp]
-                   (contains? state exp))
-                 (:goal self)))
-  (actions [self state]
-   (let [action-list (:action-list self)]
-     (reduce (fn [acc action]
-               (if (meets-preconditions? action state)
-                 (conj acc action)
-                 acc))
-             #{} action-list))))
+(defn actions [action-set state]
+  (reduce (fn [acc action]
+            (if (meets-preconditions? action state)
+              (conj acc action)
+              acc))
+          #{} action-set))
 
 (defn result
   [state action]
@@ -71,16 +60,19 @@
 
 (defn planning-problem
   ([init goal]
-   (PlanningProblem. (set init) (set goal) #{}))
+   {:init (set init)
+    :goal (set goal)})
   ([init goal action-list]
-   (PlanningProblem. (set init) (set goal) action-list)))
+   {:init (set init)
+    :goal (set goal)
+    :action-list (set action-list)}))
+
+(defn start-action [state]
+  (action (expr :START (into [] state)) {}))
 
 (defn make-relations [name & args]
   (map #(apply (partial expr name) %)
        (product args)))
-
-(let [ex (expr :have :good :cake)])
-
 
 (defn- str-expr [expr]
   (str (:name expr) (:args expr)))
@@ -89,5 +81,3 @@
   (cond
     (= (:type item) :expr) (str-expr item)
     (= (:type item) :action) (str-expr (:op item))))
-
-(str (action (expr :be :good) {}))

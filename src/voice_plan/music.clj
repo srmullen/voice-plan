@@ -1,6 +1,10 @@
 (ns voice-plan.music
   (:require [voice-plan.planning :refer :all]
-            [overtone.live :refer :all]))
+            [overtone.live :refer :all]
+            [clojure.core.async
+             :as async
+             :refer [>! <! >!! <!! go chan close!]]
+            [voice-plan.instruments :refer [syn]]))
 
 ;
 ; What are the actions for voice leading and melodies? They are steps
@@ -15,19 +19,6 @@
 
 ; Have each note as an action. The preconditions can be notes the voice is
 ; allowed to move from.
-(defn whole-step-up [note]
-  (let [previous (expr :at (- note 2))]
-   (action (expr :move note)
-           {:positive #{previous}
-            :add      #{(expr :at note)}
-            :remove   #{previous}})))
-
-(defn whole-step-down [note]
-  (let [previous (expr :at (+ note 2))]
-   (action (expr :move note)
-           {:positive #{previous}
-            :add      #{(expr :at note)}
-            :remove   #{previous}})))
 
 (defn step-action
   "Given a step and a note value, returns an action that takes
@@ -39,38 +30,30 @@
             :add      #{(expr :at note)}
             :remove   #{previous}})))
 
-(def action-set
-  (into #{} (mapcat (juxt (partial step-action 1) (partial step-action -1))
-                    (range 50 70))))
-
-(def problem (planning-problem [] [] action-set))
-
-(defsynth syn [freq 440]
-  (out 0 (pan2 (* (env-gen (perc) :action FREE)
-                  (sin-osc freq)))))
+(defn play-expr [expr time]
+  (let [midi (first (:args expr))]
+    (at time (syn (midi->hz midi)))))
 
 ; Playing a melody from an action set
 (defn noodle []
-  (let [action-set (into #{} (mapcat (juxt (partial step-action 1)
-                                           (partial step-action -1)
+  (let [action-set (into #{} (mapcat (juxt (partial step-action -5)
                                            (partial step-action 5)
-                                           (partial step-action -6)))
+                                           (partial step-action 1)))
                              (range 30 100))
-        problem (planning-problem [] [] action-set)
         start-note (+ 30 (rand-int 70))
-        duration 100
-        iterations 200]
+        duration 200
+        iterations 200
+        time (now)]
     (loop [iteration 0
            state #{(expr :at start-note)}]
       (let [note (first state)
             midi (first (:args note))]
-        (syn (midi->hz midi)))
-      (Thread/sleep duration)
+        (at (+ time (* iteration duration))
+            (syn (midi->hz midi))))
       (if (not (> iteration iterations))
         (recur (inc iteration)
-          (result state (rand-nth (into [] (actions problem state)))))))))
-
-(noodle)
+          (result state (rand-nth (into [] (actions action-set state)))))))))
 
 (comment
+  (noodle)
   (syn))
